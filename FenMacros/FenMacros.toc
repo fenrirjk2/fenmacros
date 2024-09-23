@@ -1,0 +1,9 @@
+## Interface: 11200
+## Title: Fenrir's Macros
+## Notes: Displays a swing timer bar based on main hand attack speed.
+## Author: Terrub le Programmer
+## Version: 0.0.1
+## Dependencies:
+## SavedVariables: FenMacrosDB
+
+FenMacros.lua
