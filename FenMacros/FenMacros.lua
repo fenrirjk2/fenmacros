@@ -301,7 +301,18 @@ end
 
 --------
 
-local function cast_parse_ctrl(ctrl)
+local function find_ctrl(s)
+    sp, ep = string.find(s, "^%s*%[[^%]]*%]", p)
+    if sp ~= nil then
+        c = string.sub(strtrim(string.sub(s, sp, ep)), 2, -2)
+
+        debugLog("find_ctrl: Found control: " .. c .. " at pos: " .. sp)
+    end
+
+    return c, sp, ep
+end
+
+local function parse_ctrl(ctrl)
     local m = nil
     local c = -1
 
@@ -328,6 +339,21 @@ local function cast_parse_ctrl(ctrl)
     end
 
     return m, c
+end
+
+local function check_ctrl(modifier, combat)
+    local c = combat
+    local m = modifier
+
+    if (c ~= -1 and c ~= UnitAffectingCombat("Player"))
+        or ((m == 'ctrl' or m == 'control') and not IsControlKeyDown())
+        or (m == 'alt' and not IsAltKeyDown())
+        or (m == 'shift' and not IsShiftKeyDown())
+        or (m == 'nomod' and (IsControlKeyDown() or IsAltKeyDown() or IsShiftKeyDown())) then
+        return false
+    else
+        return true
+    end
 end
 
 --------
@@ -421,14 +447,10 @@ local function cast(s)
 
         debugLog("Parsing: at pos: " .. p .. ": " .. string.sub(s, p))
 
-        sp, ep = string.find(s, "^%s*%[[^%]]*%]", p)
+        c, sp, ep = find_ctrl(s)
         if sp ~= nil then
             p = ep+1
-            c = string.sub(strtrim(string.sub(s, sp, ep)), 2, -2)
-
-            debugLog("cast: Found control: " .. c .. " at pos: " .. sp)
-
-            m, c = cast_parse_ctrl(c)
+            m, c = parse_ctrl(c)
         end
 
         sp, ep = string.find(s, "[^,]+", p)
@@ -442,11 +464,7 @@ local function cast(s)
             while continue do
                 continue = false
 
-                if (c ~= -1 and c ~= UnitAffectingCombat("Player"))
-                    or ((m == 'ctrl' or m == 'control') and not IsControlKeyDown())
-                    or (m == 'alt' and not IsAltKeyDown())
-                    or (m == 'shift' and not IsShiftKeyDown())
-                    or (m == 'nomod' and (IsControlKeyDown() or IsAltKeyDown() or IsShiftKeyDown())) then
+                if false == check_ctrl(m, c) then
                     debugLog("cast: break1")
                     break
                 end
@@ -460,6 +478,61 @@ local function cast(s)
     end
 end
 
+local function startattack(s)
+    s, _, _ = find_ctrl(s)
+    m, c = parse_ctrl(s)
+
+    debugLog("startattack: m:" .. m)
+    debugLog("startattack: c:" .. c)
+
+    if true == check_ctrl(m, c) then
+        if not PlayerFrame.inCombat then
+            AttackTarget()
+        end
+    end
+end
+
+local function stopattack(s)
+    s, _, _ = find_ctrl(s)
+    m, c = parse_ctrl(s)
+
+    debugLog("stopattack: m:" .. m)
+    debugLog("stopattack: c:" .. c)
+
+    if true == check_ctrl(m, c) then
+        if PlayerFrame.inCombat then
+            AttackTarget()
+        end
+    end
+end
+
+local function petattack(s)
+    s, _, _ = find_ctrl(s)
+    m, c = parse_ctrl(s)
+
+    if true == check_ctrl(m, c) then
+        debugLog("petattack: check_ctrl is true")
+        PetAttack()
+    else
+        debugLog("petattack: check_ctrl is false")
+    end
+end
+
+local function petfollow(s)
+    s, _, _ = find_ctrl(s)
+    m, c = parse_ctrl(s)
+
+    debugLog("petfollow: m:" .. m)
+    debugLog("petfollow: c:" .. c)
+
+    if true == check_ctrl(m, c) then
+        debugLog("petfollow: check_ctrl is true")
+        PetFollow()
+    else
+        debugLog("petfollow: check_ctrl is false")
+    end
+end
+
 --------
 
 local function populateSlashCommandList()
@@ -470,6 +543,34 @@ local function populateSlashCommandList()
         "cast",
         cast,
         "[|cffffff330+|r] |cff999999\n\t-- Cast a spell.|r",
+        nil
+    )
+
+    addSlashCommand(
+        "startattack",
+        startattack,
+        "[|cffffff330+|r] |cff999999\n\t-- Start attacking.|r",
+        nil
+    )
+
+    addSlashCommand(
+        "stopattack",
+        stopattack,
+        "[|cffffff330+|r] |cff999999\n\t-- Stop attacking.|r",
+        nil
+    )
+
+    addSlashCommand(
+        "petattack",
+        petattack,
+        "[|cffffff330+|r] |cff999999\n\t-- Tell the pet to attack.|r",
+        nil
+    )
+
+    addSlashCommand(
+        "petfollow",
+        petfollow,
+        "[|cffffff330+|r] |cff999999\n\t-- Tell the pet to follow.|r",
         nil
     )
 

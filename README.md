@@ -6,3 +6,11 @@
 
 /fm equipslot 17 Pummeler Gauntlet
 
+/fm startattack
+
+/fm stopattack
+
+/fm petattack
+
+/fm petfollow
+
